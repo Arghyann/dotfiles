@@ -1,0 +1,13 @@
+[Unit]
+Description=Save incoming Taildrop files to the downloads directory
+ConditionPathExists=/usr/bin/tailscale
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/taildrop-receive
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

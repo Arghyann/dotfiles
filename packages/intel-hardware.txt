@@ -1,0 +1,8 @@
+# Intel Hardware Support & Drivers (Lenovo IdeaPad / Intel 12th Gen)
+intel-media-driver
+intel-ucode
+lib32-vulkan-intel
+sof-firmware
+thermald
+vpl-gpu-rt
+vulkan-intel

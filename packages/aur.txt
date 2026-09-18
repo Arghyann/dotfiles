@@ -1,0 +1,12 @@
+# AUR Applications and Packages
+brave-bin
+google-chrome
+google-cloud-cli
+localsend-bin
+postman-bin
+sherlock
+spotify
+ttf-ia-writer
+typora
+visual-studio-code-bin
+yaru-icon-theme

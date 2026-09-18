@@ -1,0 +1,48 @@
+#!/bin/bash
+# Syncs hyprsunset temperature based on current time of day.
+# Self-heals hyprsunset if it is dead, hung, or its IPC socket is orphaned.
+
+# Configurable schedule thresholds (24-hour clock)
+DAY_START_HOUR=7    # 07:00 (7:00 AM) -> Daylight / Neutral (6500K)
+NIGHT_START_HOUR=20 # 20:00 (8:00 PM) -> Warm Nightlight (4000K)
+
+ensure_hyprsunset() {
+  # Check if hyprsunset is currently responsive to IPC
+  if hyprctl hyprsunset temperature >/dev/null 2>&1; then
+    return 0
+  fi
+
+  # Clean up any dead, frozen, or orphaned hyprsunset instances
+  pkill -9 -x hyprsunset 2>/dev/null || true
+
+  # Remove orphaned socket file if it was left behind
+  local sock_dir="${XDG_RUNTIME_DIR:-/run/user/$UID}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}"
+  if [[ -n "$HYPRLAND_INSTANCE_SIGNATURE" && -d "$sock_dir" ]]; then
+    rm -f "$sock_dir/.hyprsunset.sock" 2>/dev/null || true
+  fi
+
+  # Start fresh instance under uwsm
+  setsid uwsm-app -- hyprsunset >/dev/null 2>&1 &
+
+  # Wait up to 2 seconds for IPC socket to become ready
+  for _ in {1..20}; do
+    if hyprctl hyprsunset temperature >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.1
+  done
+}
+
+ensure_hyprsunset
+
+CURRENT_HOUR=$(date +%H)
+CURRENT_HOUR=$((10#$CURRENT_HOUR))
+
+if (( CURRENT_HOUR >= DAY_START_HOUR && CURRENT_HOUR < NIGHT_START_HOUR )); then
+  hyprctl hyprsunset temperature 6500 >/dev/null 2>&1
+  hyprctl hyprsunset identity >/dev/null 2>&1
+else
+  hyprctl hyprsunset temperature 4000 >/dev/null 2>&1
+fi
+
+omarchy-shell -q nightlight refresh >/dev/null 2>&1 || true

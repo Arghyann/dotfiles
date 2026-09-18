@@ -1,0 +1,18 @@
+# Official Arch GUI Applications & Media
+chromium
+evince
+firefox
+gpu-screen-recorder
+libreoffice-fresh
+moonlight-qt
+mpv
+mpv-mpris
+obs-studio
+obsidian
+pinta
+proton-vpn-cli
+signal-desktop
+xournalpp
+yt-dlp
+zathura
+zathura-pdf-mupdf

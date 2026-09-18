@@ -1,0 +1,53 @@
+#!/bin/bash
+# Battery Conservation Mode Manager for Lenovo IdeaPad
+
+DEVICE="/sys/bus/platform/devices/VPC2004:00/conservation_mode"
+
+if [[ ! -f "$DEVICE" ]]; then
+    echo "Error: Conservation mode sysfs node not found on this device." >&2
+    exit 1
+fi
+
+get_status() {
+    local val
+    val=$(cat "$DEVICE" 2>/dev/null)
+    if [[ "$val" == "1" ]]; then
+        echo "enabled (capped at 80%)"
+    elif [[ "$val" == "0" ]]; then
+        echo "disabled (charges to 100%)"
+    else
+        echo "unknown ($val)"
+    fi
+}
+
+case "$1" in
+    on|enable|1|80)
+        echo 1 > "$DEVICE"
+        echo "🔋 Battery conservation mode ENABLED (charge capped at 80%)."
+        ;;
+    off|disable|0|100)
+        echo 0 > "$DEVICE"
+        echo "⚡ Battery conservation mode DISABLED (charging to 100%)."
+        ;;
+    toggle)
+        CURRENT=$(cat "$DEVICE" 2>/dev/null)
+        if [[ "$CURRENT" == "1" ]]; then
+            echo 0 > "$DEVICE"
+            echo "⚡ Battery conservation mode DISABLED (charging to 100%)."
+        else
+            echo 1 > "$DEVICE"
+            echo "🔋 Battery conservation mode ENABLED (charge capped at 80%)."
+        fi
+        ;;
+    status|"")
+        echo "Battery conservation mode is currently: $(get_status)"
+        ;;
+    *)
+        echo "Usage: $(basename "$0") {on|off|toggle|status}"
+        echo "  on      - Cap charging at 80% (preserves battery health)"
+        echo "  off     - Allow charging to 100% (for travel/mobile use)"
+        echo "  toggle  - Switch between 80% and 100%"
+        echo "  status  - Show current conservation state"
+        exit 1
+        ;;
+esac
